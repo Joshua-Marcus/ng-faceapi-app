@@ -7,4 +7,14 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'faceApi';
+  video = document.getElementById("video");
+
+  constructor() {}
+  startVideo() {
+    navigator.getUserMedia(
+      { video: {} },
+      (stream) => (this.video.srcObject = stream),
+      (err) => console.error(err)
+    );
+  }
 }
