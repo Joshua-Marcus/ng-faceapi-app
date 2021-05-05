@@ -11,6 +11,9 @@ export class AppComponent implements OnInit {
   title = 'faceApi';
   @ViewChild('video') video: ElementRef<HTMLVideoElement>;
   message: string;
+  age: string;
+  gender: string;
+  ageProb: string;
 
   constructor() {}
 
@@ -20,42 +23,50 @@ export class AppComponent implements OnInit {
       faceapi.nets.faceLandmark68Net.loadFromUri("assets/models"),
       faceapi.nets.faceRecognitionNet.loadFromUri("assets/models"),
       faceapi.nets.faceExpressionNet.loadFromUri("assets/models"),
+      faceapi.nets.ageGenderNet.loadFromUri('assets/models')
     ]);
     this.startVideo();
   }
 
   runDetection() {
     const canvas = faceapi.createCanvasFromMedia(this.video.nativeElement);
+    canvas.fillStyle = "red";
     document.body.append(canvas);
     const displaySize = { width: this.video.nativeElement.width, height: this.video.nativeElement.height };
     faceapi.matchDimensions(canvas, displaySize);
     setInterval(async () => {
       const detections = await faceapi
         .detectAllFaces(this.video.nativeElement, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceExpressions();
+        .withFaceExpressions()
+        .withAgeAndGender();
       const resizedDetections = faceapi.resizeResults(detections, displaySize);
+
       canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+
       faceapi.draw.drawDetections(canvas, resizedDetections);
-      faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
-      faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+      // faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+      // faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
       detections.map((detection) => {
+        console.log({detection})
+        this.age = detection.age;
+        this.gender = detection.gender;
+        this.ageProb = detection.genderProbability;
         if (detection.expressions.sad > 0.5) {
-          this.message = "Emotion: Sad";
+          this.message = "Sad";
         } else if (detection.expressions.happy > 0.5) {
-          this.message = "Emotion: Happy";
+          this.message = "Happy";
 
         } else if (detection.expressions.surprised > 0.5) {
-          this.message = "Emotion: Surprised";
+          this.message = "Surprised";
 
         } else if (detection.expressions.disgusted > 0.5) {
-          this.message = "Emotion: Disgusted";
+          this.message = "Disgusted";
         } else if (detection.expressions.fearful > 0.5) {
-          this.message = "Emotion: Fearful";
+          this.message = "Fearful";
         } else if (detection.expressions.angry > 0.5) {
-          this.message = "Emotion: Happy";
+          this.message = "Happy";
         } else {
-          this.message = "Emotion: Neutral";
+          this.message = "Neutral";
         }
       });
     }, 500);
